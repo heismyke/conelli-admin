@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: Conelli Admin Backend API
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: API status
+  /health/ping:
+    get:
+      summary: Ping
+      responses:
+        "200":
+          description: Pong
+  /admin:
+    get:
+      summary: Admin summary
+      responses:
+        "200":
+          description: Admin service status

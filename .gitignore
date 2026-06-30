@@ -1,0 +1,8 @@
+.env
+backend
+admin-backend
+tmp/
+dist/
+.cache/
+data/*.json
+.DS_Store
