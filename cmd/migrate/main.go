@@ -1,39 +1,35 @@
 package main
 
 import (
-	"flag"
+	"context"
 	"log"
+	"os"
+	"strconv"
 
-	"github.com/joho/godotenv"
-
-	"github.com/conelli/admin-backend/config"
-	"github.com/conelli/admin-backend/db"
-	"github.com/conelli/admin-backend/db/migrations"
+	"github.com/conelli/admin-backend/internal/store"
 )
 
 func main() {
-	_ = godotenv.Load()
-
-	direction := flag.String("direction", "up", "migration direction: up or down")
-	flag.Parse()
-
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+	targetNumber := 0
+	if len(os.Args) > 2 {
+		number, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatalf("invalid migration target: %v", err)
+		}
+		targetNumber = number
 	}
 
-	client, err := db.New(cfg.DatabaseURL)
+	db, err := store.NewPool()
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
-	defer client.Close()
 
-	sqlDB, err := client.SQLDB()
+	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatalf("failed to access sql database: %v", err)
 	}
 
-	if err := migrations.Run(sqlDB, *direction); err != nil {
+	if err := store.Migrate(context.Background(), sqlDB, targetNumber); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
 }

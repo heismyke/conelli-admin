@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    env_file:
+      - ../.env
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${USER:-postgres}
+      POSTGRES_PASSWORD: ${PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-conelli_admin}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
