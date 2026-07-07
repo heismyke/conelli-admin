@@ -8,8 +8,8 @@ if [ -f ".env" ]; then
 fi
 
 DB_HOST="${HOST:-localhost}"
-DB_PORT="${DB_PORT:-5432}"
-DB_USER="${USER:-postgres}"
+DB_PORT="${DB_PORT:-55432}"
+DB_USER="${DB_USER:-postgres}"
 DB_NAME="${DB_NAME:-conelli_admin}"
 
 if [ -n "${PASSWORD:-}" ]; then

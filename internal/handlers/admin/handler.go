@@ -24,6 +24,39 @@ func (h *Handler) RegisterAdminHandler(r *gin.RouterGroup) {
 	r.GET("/data", h.GetData)
 	r.PUT("/data", h.SaveData)
 	r.POST("/login", h.Login)
+	r.POST("/uploads/presign", h.PresignUpload)
+
+	r.GET("/properties", h.ListProperties)
+	r.POST("/properties", h.CreateProperty)
+	r.GET("/properties/:id", h.GetProperty)
+	r.PUT("/properties/:id", h.UpdateProperty)
+	r.DELETE("/properties/:id", h.DeleteProperty)
+
+	r.GET("/investors", h.ListInvestors)
+	r.POST("/investors", h.CreateInvestor)
+	r.GET("/investors/:id", h.GetInvestor)
+	r.PUT("/investors/:id", h.UpdateInvestor)
+	r.DELETE("/investors/:id", h.DeleteInvestor)
+	r.PUT("/investors/:id/properties/:propertyId", h.SetInvestorProperty)
+	r.DELETE("/investors/:id/properties/:propertyId", h.UnsetInvestorProperty)
+
+	r.GET("/users", h.ListUsers)
+	r.POST("/users", h.CreateUser)
+	r.GET("/users/:id", h.GetUser)
+	r.PUT("/users/:id", h.UpdateUser)
+	r.DELETE("/users/:id", h.DeleteUser)
+
+	r.POST("/updates", h.CreateUpdate)
+	r.PUT("/updates/:id", h.UpdateUpdate)
+	r.DELETE("/updates/:id", h.DeleteUpdate)
+
+	r.POST("/milestones", h.CreateMilestone)
+	r.PUT("/milestones/:id", h.UpdateMilestone)
+	r.DELETE("/milestones/:id", h.DeleteMilestone)
+
+	r.POST("/documents", h.CreateDocument)
+	r.PUT("/documents/:id", h.UpdateDocument)
+	r.DELETE("/documents/:id", h.DeleteDocument)
 }
 
 func (h *Handler) GetSummary(c *gin.Context) {

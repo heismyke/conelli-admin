@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/conelli/admin-backend/config"
 	"github.com/conelli/admin-backend/internal/handlers/admin"
@@ -38,7 +39,7 @@ func NewApi(addr string) (*Api, error) {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{config.Envs.CORS_ORIGIN},
+		AllowOrigins:     corsOrigins(),
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -57,4 +58,17 @@ func NewApi(addr string) (*Api, error) {
 
 func (a *Api) Run() error {
 	return a.router.Run(a.addr)
+}
+
+func corsOrigins() []string {
+	origins := strings.Split(config.Envs.CORS_ORIGIN, ",")
+	allowed := make([]string, 0, len(origins))
+	for _, origin := range origins {
+		origin = strings.TrimSpace(origin)
+		if origin != "" {
+			allowed = append(allowed, origin)
+		}
+	}
+
+	return allowed
 }
