@@ -26,6 +26,7 @@ type Config struct {
 	AWS_S3_BUCKET     string
 	AWS_S3_PREFIX     string
 	AWS_S3_PUBLIC_URL string
+	AWS_S3_ENDPOINT   string
 }
 
 func (c Config) IsProduction() bool {
@@ -88,6 +89,7 @@ func initConfig() Config {
 		AWS_S3_BUCKET:     getEnv("AWS_S3_BUCKET", ""),
 		AWS_S3_PREFIX:     getEnv("AWS_S3_PREFIX", "conelli"),
 		AWS_S3_PUBLIC_URL: getEnv("AWS_S3_PUBLIC_URL", ""),
+		AWS_S3_ENDPOINT:   getEnv("AWS_S3_ENDPOINT", ""),
 	}
 }
 

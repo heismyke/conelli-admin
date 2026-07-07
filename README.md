@@ -38,9 +38,14 @@ ADMIN_EMAIL=admin@conelliengineering.com
 ADMIN_NAME=Conelli Admin
 ADMIN_PASSWORD=change-me
 AWS_REGION=eu-west-1
-AWS_S3_BUCKET=
+AWS_S3_BUCKET=conelli-dev-assets
 AWS_S3_PREFIX=conelli/dev
-AWS_S3_PUBLIC_URL=
+AWS_S3_ENDPOINT=http://localhost:9000
+AWS_S3_PUBLIC_URL=http://localhost:9000/conelli-dev-assets
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+MINIO_API_PORT=9000
+MINIO_CONSOLE_PORT=9001
 ```
 
 `DATABASE_URL` is also supported and takes precedence over the split database settings.
@@ -97,17 +102,19 @@ Content-Type: application/json
 
 The response includes `method`, `uploadUrl`, `fileUrl`, `key`, and `expiresIn`. Upload the file with `PUT uploadUrl` using the same content type, then save `fileUrl` in the relevant property/document record.
 
-## Docker Database
+## Docker Database and Local S3
 
-Start Postgres with Docker:
+Start Postgres, the admin API, and the local S3-compatible MinIO bucket with Docker:
 
 ```sh
-make dev-db-up
+make dev-up
 ```
 
 This uses Docker Compose project `conelli` and starts the database container/service as `conelli-postgres`.
 By default Postgres is exposed on host port `55432` to avoid conflicts with other local Postgres containers.
 The API container is exposed on `API_PORT`, defaulting to `8000`.
+MinIO is exposed on `http://localhost:9000`, and its console is available at `http://localhost:9001`.
+The default development bucket is `conelli-dev-assets`, created automatically by the `conelli-minio-init` service.
 
 ## Docker Environments
 
