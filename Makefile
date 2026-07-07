@@ -7,7 +7,7 @@ COMPOSE := docker compose --project-name conelli -f devops/docker-compose.yml
 DEV_COMPOSE := docker compose -f devops/docker-compose.dev.yml
 PROD_COMPOSE := docker compose -f devops/docker-compose.prod.yml
 
-.PHONY: help run dev dev-db-up dev-up dev-down dev-logs dev-migrate prod-up prod-down prod-logs build db-create migrate up docker-build docker-up docker-down docker-logs docker-migrate fmt tidy clean
+.PHONY: help run dev dev-db-up dev-up dev-down dev-logs dev-migrate seed-projects prod-up prod-down prod-logs build db-create migrate up docker-build docker-up docker-down docker-logs docker-migrate fmt tidy clean
 
 help:
 	@echo "Available targets:"
@@ -16,6 +16,7 @@ help:
 	@echo "  make dev-db-up       - run Postgres in Docker"
 	@echo "  make dev-up          - run API and Postgres in Docker"
 	@echo "  make dev-migrate     - run migrations in Docker"
+	@echo "  make seed-projects   - upsert bundled public projects into admin data"
 	@echo "  make dev-down        - stop Docker services"
 	@echo "  make dev-logs        - tail Docker API logs"
 	@echo "  make prod-up         - run production API behind Nginx"
@@ -72,6 +73,9 @@ db-create:
 
 migrate: db-create
 	GOCACHE=$(GOCACHE) go run ./cmd/migrate $(if $(MIGRATE_ARGS),$(MIGRATE_ARGS),up)
+
+seed-projects: db-create
+	GOCACHE=$(GOCACHE) go run ./cmd/seed-projects
 
 up:
 	@:

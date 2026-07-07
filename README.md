@@ -154,3 +154,13 @@ make migrate up 1
 ```
 
 The admin console data store uses GORM with Postgres. On startup the API auto-migrates the admin data table and seeds the default staff, properties, investors, updates, milestones, materials, and documents when the table is empty.
+
+## Seed Public Projects
+
+The bundled seed includes the public Corneli/CIS project catalog. To upsert those project records into an existing database without replacing staff, investors, or user-created records:
+
+```sh
+make seed-projects
+```
+
+This updates matching seeded project IDs and adds any missing seeded projects, updates, milestones, documents, and investor-property assignments. New projects created later in the admin console are served to Corneli and CIS through `/admin/data`.
