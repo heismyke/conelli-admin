@@ -67,6 +67,28 @@ func NewRealtimeHandler() *Handler {
 
 func (h *Handler) RegisterRealtimeHandler(router *gin.RouterGroup) {
 	router.GET("/ws", h.handleWebSocket)
+	router.GET("/messages", h.listMessages)
+	router.POST("/messages", h.createMessage)
+}
+
+func (h *Handler) listMessages(c *gin.Context) {
+	c.JSON(http.StatusOK, h.hub.snapshot())
+}
+
+func (h *Handler) createMessage(c *gin.Context) {
+	var inbound inboundEvent
+	if err := c.ShouldBindJSON(&inbound); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	message, notification, ok := h.hub.buildMessage(inbound, inbound.SenderRole, inbound.SenderName)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "message body is required"})
+		return
+	}
+	h.hub.broadcast(message)
+	h.hub.broadcast(notification)
+	c.JSON(http.StatusCreated, gin.H{"message": message, "notification": notification})
 }
 
 func (h *Handler) handleWebSocket(c *gin.Context) {
@@ -98,9 +120,52 @@ func (h *Handler) handleWebSocket(c *gin.Context) {
 func (h *Hub) add(client *Client) {
 	h.mu.Lock()
 	h.clients[client] = true
-	snapshot := Event{Type: "snapshot", Body: mustJSON(map[string][]Event{"messages": h.messages, "notifications": h.notifications})}
+	snapshot := Event{Type: "snapshot", Body: mustJSON(h.snapshotLocked())}
 	h.mu.Unlock()
 	client.send <- snapshot
+}
+
+func (h *Hub) snapshot() map[string][]Event {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.snapshotLocked()
+}
+
+func (h *Hub) snapshotLocked() map[string][]Event {
+	messages := append([]Event(nil), h.messages...)
+	notifications := append([]Event(nil), h.notifications...)
+	return map[string][]Event{"messages": messages, "notifications": notifications}
+}
+
+func (h *Hub) buildMessage(inbound inboundEvent, clientRole string, clientName string) (Event, Event, bool) {
+	if strings.TrimSpace(inbound.Body) == "" {
+		return Event{}, Event{}, false
+	}
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	senderRole := firstNonEmpty(inbound.SenderRole, clientRole)
+	senderName := firstNonEmpty(inbound.SenderName, clientName)
+	message := Event{
+		Type:       "message",
+		ID:         fmt.Sprintf("msg_%d", time.Now().UnixNano()),
+		RoomID:     firstNonEmpty(inbound.RoomID, roomID),
+		SenderID:   inbound.SenderID,
+		SenderName: senderName,
+		SenderRole: senderRole,
+		Body:       strings.TrimSpace(inbound.Body),
+		CreatedAt:  now,
+	}
+	notification := Event{
+		Type:       "notification",
+		ID:         fmt.Sprintf("ntf_%d", time.Now().UnixNano()),
+		RoomID:     message.RoomID,
+		SenderID:   message.SenderID,
+		SenderName: senderName,
+		SenderRole: senderRole,
+		Title:      fmt.Sprintf("New message from %s", senderName),
+		Body:       message.Body,
+		CreatedAt:  now,
+	}
+	return message, notification, true
 }
 
 func (h *Hub) remove(client *Client) {
@@ -153,32 +218,9 @@ func (c *Client) readLoop(reader *bufio.Reader) {
 		if err := json.Unmarshal(payload, &inbound); err != nil {
 			continue
 		}
-		if strings.TrimSpace(inbound.Body) == "" {
+		message, notification, ok := c.hub.buildMessage(inbound, c.role, c.name)
+		if !ok {
 			continue
-		}
-		now := time.Now().UTC().Format(time.RFC3339Nano)
-		senderRole := firstNonEmpty(inbound.SenderRole, c.role)
-		senderName := firstNonEmpty(inbound.SenderName, c.name)
-		message := Event{
-			Type:       "message",
-			ID:         fmt.Sprintf("msg_%d", time.Now().UnixNano()),
-			RoomID:     firstNonEmpty(inbound.RoomID, roomID),
-			SenderID:   inbound.SenderID,
-			SenderName: senderName,
-			SenderRole: senderRole,
-			Body:       strings.TrimSpace(inbound.Body),
-			CreatedAt:  now,
-		}
-		notification := Event{
-			Type:       "notification",
-			ID:         fmt.Sprintf("ntf_%d", time.Now().UnixNano()),
-			RoomID:     message.RoomID,
-			SenderID:   message.SenderID,
-			SenderName: senderName,
-			SenderRole: senderRole,
-			Title:      fmt.Sprintf("New message from %s", senderName),
-			Body:       message.Body,
-			CreatedAt:  now,
 		}
 		c.hub.broadcast(message)
 		c.hub.broadcast(notification)
