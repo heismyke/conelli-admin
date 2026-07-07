@@ -21,17 +21,23 @@ type Investor struct {
 }
 
 type Property struct {
-	ID                string `json:"id"`
-	Title             string `json:"title"`
-	Location          string `json:"location"`
-	Category          string `json:"category"`
-	Status            string `json:"status"`
-	ProgressPercent   int    `json:"progressPercent"`
-	EstCompletionDate string `json:"estCompletionDate"`
-	CoverImageURL     string `json:"coverImageUrl"`
-	Description       string `json:"description"`
-	CreatedAt         string `json:"createdAt"`
-	UpdatedAt         string `json:"updatedAt"`
+	ID                string   `json:"id"`
+	Title             string   `json:"title"`
+	Location          string   `json:"location"`
+	Category          string   `json:"category"`
+	Status            string   `json:"status"`
+	ProgressPercent   int      `json:"progressPercent"`
+	EstCompletionDate string   `json:"estCompletionDate"`
+	CoverImageURL     string   `json:"coverImageUrl"`
+	Description       string   `json:"description"`
+	PublicDescription string   `json:"publicDescription"`
+	PublicOverview    string   `json:"publicOverview"`
+	Client            string   `json:"client"`
+	Year              string   `json:"year"`
+	Tags              []string `json:"tags"`
+	GalleryImages     []string `json:"galleryImages"`
+	CreatedAt         string   `json:"createdAt"`
+	UpdatedAt         string   `json:"updatedAt"`
 }
 
 type InvestorProperty struct {

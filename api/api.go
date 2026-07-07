@@ -1,7 +1,15 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
 
 	"github.com/conelli/admin-backend/config"
 	"github.com/conelli/admin-backend/internal/handlers/admin"
@@ -19,6 +27,10 @@ type Api struct {
 }
 
 func NewApi(addr string) (*Api, error) {
+	if config.Envs.IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	db, err := store.NewPool()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -38,7 +50,7 @@ func NewApi(addr string) (*Api, error) {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{config.Envs.CORS_ORIGIN},
+		AllowOrigins:     corsOrigins(),
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -56,5 +68,45 @@ func NewApi(addr string) (*Api, error) {
 }
 
 func (a *Api) Run() error {
-	return a.router.Run(a.addr)
+	server := &http.Server{
+		Addr:              a.addr,
+		Handler:           a.router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.ListenAndServe()
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-errCh:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	case <-quit:
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		return server.Shutdown(ctx)
+	}
+}
+
+func corsOrigins() []string {
+	origins := strings.Split(config.Envs.CORS_ORIGIN, ",")
+	allowed := make([]string, 0, len(origins))
+	for _, origin := range origins {
+		origin = strings.TrimSpace(origin)
+		if origin != "" {
+			allowed = append(allowed, origin)
+		}
+	}
+
+	return allowed
 }

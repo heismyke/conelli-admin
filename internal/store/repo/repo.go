@@ -46,6 +46,25 @@ func (r *Repo) Init() error {
 	return nil
 }
 
+func (r *Repo) SeedProjects(ctx context.Context) error {
+	seed := SeedData()
+	data, err := r.AdminData(ctx)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		return r.SaveAdminData(ctx, seed)
+	}
+
+	upsertProperties(&data, seed.Properties)
+	upsertUpdates(&data, seed.Updates)
+	upsertMilestones(&data, seed.Milestones)
+	upsertDocuments(&data, seed.Documents)
+	upsertInvestorProperties(&data, seed.InvestorProperties)
+
+	return r.SaveAdminData(ctx, data)
+}
+
 func (r *Repo) AdminSummary(ctx context.Context) map[string]string {
 	return map[string]string{
 		"service": "Conelli Admin API",
@@ -162,4 +181,82 @@ func validPassword(hash string, password string) bool {
 	}
 
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+}
+
+func upsertProperties(data *dao.AdminData, seeded []dao.Property) {
+	index := make(map[string]int, len(data.Properties))
+	for i, property := range data.Properties {
+		index[property.ID] = i
+	}
+
+	for _, property := range seeded {
+		if i, ok := index[property.ID]; ok {
+			existing := data.Properties[i]
+			if existing.CreatedAt != "" {
+				property.CreatedAt = existing.CreatedAt
+			}
+			if property.UpdatedAt == "" {
+				property.UpdatedAt = existing.UpdatedAt
+			}
+			data.Properties[i] = property
+			continue
+		}
+		data.Properties = append(data.Properties, property)
+	}
+}
+
+func upsertUpdates(data *dao.AdminData, seeded []dao.Update) {
+	index := make(map[string]int, len(data.Updates))
+	for i, update := range data.Updates {
+		index[update.ID] = i
+	}
+	for _, update := range seeded {
+		if i, ok := index[update.ID]; ok {
+			data.Updates[i] = update
+			continue
+		}
+		data.Updates = append(data.Updates, update)
+	}
+}
+
+func upsertMilestones(data *dao.AdminData, seeded []dao.Milestone) {
+	index := make(map[string]int, len(data.Milestones))
+	for i, milestone := range data.Milestones {
+		index[milestone.ID] = i
+	}
+	for _, milestone := range seeded {
+		if i, ok := index[milestone.ID]; ok {
+			data.Milestones[i] = milestone
+			continue
+		}
+		data.Milestones = append(data.Milestones, milestone)
+	}
+}
+
+func upsertDocuments(data *dao.AdminData, seeded []dao.Document) {
+	index := make(map[string]int, len(data.Documents))
+	for i, document := range data.Documents {
+		index[document.ID] = i
+	}
+	for _, document := range seeded {
+		if i, ok := index[document.ID]; ok {
+			data.Documents[i] = document
+			continue
+		}
+		data.Documents = append(data.Documents, document)
+	}
+}
+
+func upsertInvestorProperties(data *dao.AdminData, seeded []dao.InvestorProperty) {
+	exists := make(map[string]bool, len(data.InvestorProperties))
+	for _, item := range data.InvestorProperties {
+		exists[item.InvestorID+"::"+item.PropertyID] = true
+	}
+	for _, item := range seeded {
+		key := item.InvestorID + "::" + item.PropertyID
+		if exists[key] {
+			continue
+		}
+		data.InvestorProperties = append(data.InvestorProperties, item)
+	}
 }

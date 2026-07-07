@@ -35,7 +35,7 @@ func NewPool() (*gorm.DB, error) {
 		dsn = fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 			config.Envs.HOST,
-			config.Envs.USER,
+			config.Envs.DB_USER,
 			config.Envs.PASSWORD,
 			config.Envs.DB_NAME,
 			config.Envs.DB_PORT,

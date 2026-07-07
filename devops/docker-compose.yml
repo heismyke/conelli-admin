@@ -1,23 +1,42 @@
+name: conelli
+
 services:
-  api:
+  conelli-admin-backend:
     build:
       context: ..
       dockerfile: Dockerfile
-    env_file:
-      - ../.env
-    ports:
-      - "${PORT:-8000}:${PORT:-8000}"
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:16-alpine
+    container_name: conelli-admin-backend
     environment:
-      POSTGRES_USER: ${USER:-postgres}
+      APP_ENV: ${APP_ENV:-development}
+      PORT: ${PORT:-8000}
+      HOST: conelli-postgres
+      DB_USER: ${DB_USER:-postgres}
+      PASSWORD: ${PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-conelli_admin}
+      DB_PORT: 5432
+      SSLMODE: ${SSLMODE:-disable}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:5174}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@conelliengineering.com}
+      ADMIN_NAME: ${ADMIN_NAME:-Conelli Admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-conelli}
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_S3_PREFIX: ${AWS_S3_PREFIX:-conelli}
+      AWS_S3_PUBLIC_URL: ${AWS_S3_PUBLIC_URL:-}
+    ports:
+      - "${API_PORT:-8000}:${PORT:-8000}"
+    depends_on:
+      - conelli-postgres
+
+  conelli-postgres:
+    image: postgres:16-alpine
+    container_name: conelli-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-conelli_admin}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-55432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
