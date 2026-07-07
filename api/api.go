@@ -15,6 +15,7 @@ import (
 	"github.com/conelli/admin-backend/internal/handlers/admin"
 	"github.com/conelli/admin-backend/internal/handlers/auth"
 	"github.com/conelli/admin-backend/internal/handlers/health"
+	"github.com/conelli/admin-backend/internal/handlers/realtime"
 	"github.com/conelli/admin-backend/internal/store"
 	"github.com/conelli/admin-backend/internal/store/repo"
 	"github.com/gin-contrib/cors"
@@ -46,6 +47,7 @@ func NewApi(addr string) (*Api, error) {
 	adminHandler := admin.NewAdminHandler(adminRepo)
 	authHandler := auth.NewAuthHandler(adminRepo)
 	healthHandler := health.NewHealthHandler()
+	realtimeHandler := realtime.NewRealtimeHandler()
 
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
@@ -60,6 +62,7 @@ func NewApi(addr string) (*Api, error) {
 	healthHandler.RegisterHealthHandler(router.Group("/health"))
 	authHandler.RegisterAuthHandler(router.Group("/auth"))
 	adminHandler.RegisterAdminHandler(router.Group("/admin"))
+	realtimeHandler.RegisterRealtimeHandler(router.Group("/realtime"))
 
 	return &Api{
 		addr:   addr,
