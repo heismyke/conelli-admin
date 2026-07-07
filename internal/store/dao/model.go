@@ -3,12 +3,13 @@ package dao
 import "gorm.io/datatypes"
 
 type AdminUser struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"passwordHash"`
-	Role         string `json:"role"`
-	CreatedAt    string `json:"createdAt"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Email           string `json:"email"`
+	PasswordHash    string `json:"passwordHash"`
+	Role            string `json:"role"`
+	ProfileImageURL string `json:"profileImageUrl"`
+	CreatedAt       string `json:"createdAt"`
 }
 
 type Investor struct {
