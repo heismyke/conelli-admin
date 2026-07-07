@@ -127,7 +127,24 @@ make prod-up
 make prod-logs
 ```
 
-`devops/docker-compose.prod.yml` runs the API behind an Nginx reverse proxy using `devops/nginx.conf`. The proxy forwards `/health`, `/auth`, and `/admin` to the backend.
+`devops/docker-compose.prod.yml` runs the API behind an Nginx reverse proxy using `devops/nginx.conf`. The proxy forwards `/health`, `/auth`, and `/admin` to the backend and exposes `/healthz` for proxy health checks.
+
+Production startup validates required values and fails fast when any of these are missing:
+
+```sh
+APP_ENV=production
+PORT=8000
+DATABASE_URL=postgres://...
+CORS_ORIGIN=https://admin.conelliengineering.com,https://cis.conelliengineering.com
+ADMIN_EMAIL=admin@conelliengineering.com
+ADMIN_PASSWORD=replace-with-strong-password
+AWS_REGION=eu-west-1
+AWS_S3_BUCKET=conelli-prod-assets
+```
+
+Keep `PORT=8000` in production unless `devops/nginx.conf` is updated too, because the Nginx upstream and Docker health checks target the API container on port `8000`.
+
+The production image runs as a non-root user, includes a container health check at `/health`, and the Go server handles `SIGTERM` with a graceful shutdown window.
 
 ## Migrations
 

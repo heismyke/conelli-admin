@@ -9,6 +9,10 @@ import (
 )
 
 func main() {
+	if err := config.Envs.Validate(); err != nil {
+		log.Fatalf("configuration error: %v", err)
+	}
+
 	server, err := api.NewApi(fmt.Sprintf(":%s", config.Envs.PORT))
 	if err != nil {
 		log.Fatalf("failed to initialize application: %v", err)

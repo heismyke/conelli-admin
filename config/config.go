@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -24,6 +26,43 @@ type Config struct {
 	AWS_S3_BUCKET     string
 	AWS_S3_PREFIX     string
 	AWS_S3_PUBLIC_URL string
+}
+
+func (c Config) IsProduction() bool {
+	return strings.EqualFold(c.APP_ENV, "production")
+}
+
+func (c Config) Validate() error {
+	if !c.IsProduction() {
+		return nil
+	}
+
+	required := map[string]string{
+		"PORT":           c.PORT,
+		"DATABASE_URL":   c.DATABASE_URL,
+		"CORS_ORIGIN":    c.CORS_ORIGIN,
+		"ADMIN_EMAIL":    c.ADMIN_EMAIL,
+		"ADMIN_PASSWORD": c.ADMIN_PASSWORD,
+		"AWS_REGION":     c.AWS_REGION,
+		"AWS_S3_BUCKET":  c.AWS_S3_BUCKET,
+	}
+
+	missing := make([]string, 0)
+	for key, value := range required {
+		if strings.TrimSpace(value) == "" {
+			missing = append(missing, key)
+		}
+	}
+
+	if c.ADMIN_PASSWORD == "change-me" {
+		missing = append(missing, "ADMIN_PASSWORD must not use the default development value")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("invalid production configuration: %s", strings.Join(missing, ", "))
+	}
+
+	return nil
 }
 
 var Envs = initConfig()
