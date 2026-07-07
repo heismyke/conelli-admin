@@ -20,13 +20,21 @@ services:
       ADMIN_NAME: ${ADMIN_NAME:-Conelli Admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-conelli}
       AWS_REGION: ${AWS_REGION:-eu-west-1}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-conelli-dev-assets}
       AWS_S3_PREFIX: ${AWS_S3_PREFIX:-conelli}
-      AWS_S3_PUBLIC_URL: ${AWS_S3_PUBLIC_URL:-}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT:-http://localhost:9000}
+      AWS_S3_PUBLIC_URL: ${AWS_S3_PUBLIC_URL:-http://localhost:9000/conelli-dev-assets}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
     ports:
       - "${API_PORT:-8000}:${PORT:-8000}"
     depends_on:
-      - conelli-postgres
+      conelli-postgres:
+        condition: service_started
+      conelli-minio:
+        condition: service_healthy
+      conelli-minio-init:
+        condition: service_completed_successfully
 
   conelli-postgres:
     image: postgres:16-alpine
@@ -40,5 +48,41 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  conelli-minio:
+    image: minio/minio:latest
+    container_name: conelli-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  conelli-minio-init:
+    image: minio/mc:latest
+    container_name: conelli-minio-init
+    depends_on:
+      conelli-minio:
+        condition: service_healthy
+    environment:
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-conelli-dev-assets}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://conelli-minio:9000 $${AWS_ACCESS_KEY_ID} $${AWS_SECRET_ACCESS_KEY} &&
+      mc mb --ignore-existing local/$${AWS_S3_BUCKET} &&
+      mc anonymous set download local/$${AWS_S3_BUCKET}
+      "
+
 volumes:
   postgres-data:
+  minio-data:

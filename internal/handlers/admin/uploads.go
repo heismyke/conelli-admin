@@ -59,6 +59,7 @@ func (h *Handler) PresignUpload(c *gin.Context) {
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		if endpoint := strings.TrimSpace(config.Envs.AWS_S3_ENDPOINT); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
+			o.UsePathStyle = true
 		}
 	})
 	presigner := s3.NewPresignClient(client)
