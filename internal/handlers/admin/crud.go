@@ -210,6 +210,9 @@ func (h *Handler) ListInvestors(c *gin.Context) {
 	if !ok {
 		return
 	}
+	for i := range data.Investors {
+		data.Investors[i].PasswordHash = ""
+	}
 	c.JSON(http.StatusOK, data.Investors)
 }
 
@@ -223,6 +226,7 @@ func (h *Handler) GetInvestor(c *gin.Context) {
 		notFound(c, "investor not found")
 		return
 	}
+	investor.PasswordHash = ""
 	c.JSON(http.StatusOK, investor)
 }
 
@@ -234,6 +238,10 @@ func (h *Handler) CreateInvestor(c *gin.Context) {
 	}
 	if strings.TrimSpace(payload.Name) == "" || strings.TrimSpace(payload.Email) == "" {
 		badRequest(c, "name and email are required")
+		return
+	}
+	if strings.TrimSpace(payload.PasswordHash) == "" {
+		badRequest(c, "password is required")
 		return
 	}
 	data, ok := h.loadData(c)
@@ -251,6 +259,7 @@ func (h *Handler) CreateInvestor(c *gin.Context) {
 	if !h.saveData(c, data) {
 		return
 	}
+	payload.PasswordHash = ""
 	c.JSON(http.StatusCreated, payload)
 }
 
@@ -258,6 +267,10 @@ func (h *Handler) UpdateInvestor(c *gin.Context) {
 	var payload dao.Investor
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		badRequest(c, err.Error())
+		return
+	}
+	if strings.TrimSpace(payload.Name) == "" || strings.TrimSpace(payload.Email) == "" {
+		badRequest(c, "name and email are required")
 		return
 	}
 	data, ok := h.loadData(c)
@@ -270,10 +283,14 @@ func (h *Handler) UpdateInvestor(c *gin.Context) {
 		return
 	}
 	payload.ID = investor.ID
+	if strings.TrimSpace(payload.PasswordHash) == "" {
+		payload.PasswordHash = investor.PasswordHash
+	}
 	*investor = payload
 	if !h.saveData(c, data) {
 		return
 	}
+	investor.PasswordHash = ""
 	c.JSON(http.StatusOK, investor)
 }
 

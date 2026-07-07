@@ -12,12 +12,13 @@ type AdminUser struct {
 }
 
 type Investor struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Email       string `json:"email"`
-	Phone       string `json:"phone"`
-	MemberSince string `json:"memberSince"`
-	Status      string `json:"status"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	MemberSince  string `json:"memberSince"`
+	Status       string `json:"status"`
+	PasswordHash string `json:"passwordHash,omitempty"`
 }
 
 type Property struct {
@@ -108,4 +109,8 @@ type LoginPayload struct {
 
 type LoginResponse struct {
 	User AdminUser `json:"user"`
+}
+
+type InvestorLoginResponse struct {
+	Investor Investor `json:"investor"`
 }
