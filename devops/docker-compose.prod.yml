@@ -9,7 +9,7 @@ services:
     environment:
       APP_ENV: production
       PORT: ${PORT:-8000}
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:-postgres://${DB_USER:-conelli}:${PASSWORD:?set PASSWORD in .env}@conelli-postgres:5432/${DB_NAME:-conelli_admin}?sslmode=disable}
       CORS_ORIGIN: ${CORS_ORIGIN}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_NAME: ${ADMIN_NAME:-Conelli Admin}
@@ -17,15 +17,36 @@ services:
       AWS_REGION: ${AWS_REGION}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AWS_S3_PREFIX: ${AWS_S3_PREFIX:-conelli}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT:-}
       AWS_S3_PUBLIC_URL: ${AWS_S3_PUBLIC_URL:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
     expose:
       - "${PORT:-8000}"
+    depends_on:
+      conelli-postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
+
+  conelli-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-conelli}
+      POSTGRES_PASSWORD: ${PASSWORD:?set PASSWORD in .env}
+      POSTGRES_DB: ${DB_NAME:-conelli_admin}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-conelli} -d ${DB_NAME:-conelli_admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     image: nginx:1.27-alpine
@@ -42,3 +63,6 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+volumes:
+  postgres-data:
