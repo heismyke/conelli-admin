@@ -28,8 +28,8 @@ PORT=8000
 API_PORT=8000
 APP_ENV=development
 HOST=localhost
-DB_USER=postgres
-PASSWORD=postgres
+DB_USER=myke
+PASSWORD=password123
 DB_NAME=conelli_admin
 DB_PORT=55432
 SSLMODE=disable
@@ -134,7 +134,7 @@ Production startup validates required values and fails fast when any of these ar
 ```sh
 APP_ENV=production
 PORT=8000
-DATABASE_URL=postgres://...
+DATABASE_URL=postgres://myke:password123@postgres.example.internal:5432/conelli_admin?sslmode=require
 CORS_ORIGIN=https://admin.conelliengineering.com,https://cis.conelliengineering.com
 ADMIN_EMAIL=admin@conelliengineering.com
 ADMIN_PASSWORD=replace-with-strong-password

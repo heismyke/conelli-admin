@@ -9,10 +9,11 @@ fi
 
 DB_HOST="${HOST:-localhost}"
 DB_PORT="${DB_PORT:-55432}"
-DB_USER="${DB_USER:-postgres}"
+DB_USER="${DB_USER:-myke}"
+PASSWORD="${PASSWORD:-password123}"
 DB_NAME="${DB_NAME:-conelli_admin}"
 
-if [ -n "${PASSWORD:-}" ]; then
+if [ -n "$PASSWORD" ]; then
 	export PGPASSWORD="$PASSWORD"
 fi
 
