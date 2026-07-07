@@ -5,9 +5,9 @@ GOCACHE ?= $(CURDIR)/.cache/go-build
 MIGRATE_ARGS := $(filter-out migrate up,$(MAKECMDGOALS))
 COMPOSE := docker compose --project-name conelli -f devops/docker-compose.yml
 DEV_COMPOSE := docker compose -f devops/docker-compose.dev.yml
-PROD_COMPOSE := docker compose -f devops/docker-compose.prod.yml
+PROD_COMPOSE := docker compose --env-file .env -f devops/docker-compose.prod.yml
 
-.PHONY: help run dev dev-db-up dev-up dev-down dev-logs dev-migrate seed-projects prod-up prod-down prod-logs build db-create migrate up docker-build docker-up docker-down docker-logs docker-migrate fmt tidy clean
+.PHONY: help run dev dev-db-up dev-up dev-down dev-logs dev-migrate seed-projects prod-up prod-down prod-logs prod-logs-api prod-logs-db prod-logs-nginx prod-status build db-create migrate up docker-build docker-up docker-down docker-logs docker-migrate fmt tidy clean
 
 help:
 	@echo "Available targets:"
@@ -22,6 +22,10 @@ help:
 	@echo "  make prod-up         - run production API behind Nginx"
 	@echo "  make prod-down       - stop production Docker services"
 	@echo "  make prod-logs       - tail production Docker logs"
+	@echo "  make prod-logs-api   - tail production API logs"
+	@echo "  make prod-logs-db    - tail production Postgres logs"
+	@echo "  make prod-logs-nginx - tail production Nginx logs"
+	@echo "  make prod-status     - show production container status"
 	@echo "  make build           - build the API binary"
 	@echo "  make db-create       - create the configured database if missing"
 	@echo "  make migrate up      - run all up migrations"
@@ -63,6 +67,18 @@ prod-down:
 
 prod-logs:
 	$(PROD_COMPOSE) logs -f
+
+prod-logs-api:
+	$(PROD_COMPOSE) logs -f conelli-admin-backend
+
+prod-logs-db:
+	$(PROD_COMPOSE) logs -f conelli-postgres
+
+prod-logs-nginx:
+	$(PROD_COMPOSE) logs -f nginx
+
+prod-status:
+	$(PROD_COMPOSE) ps
 
 build:
 	mkdir -p $(BIN_DIR)
