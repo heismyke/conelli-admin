@@ -90,6 +90,9 @@ func (r *Repo) SaveAdminData(ctx context.Context, data dao.AdminData) error {
 	if err := normalizeUsers(&data); err != nil {
 		return err
 	}
+	if err := normalizeInvestors(&data); err != nil {
+		return err
+	}
 
 	payload, err := json.Marshal(data)
 	if err != nil {
@@ -135,6 +138,28 @@ func (r *Repo) Login(ctx context.Context, payload dao.LoginPayload) (*dao.LoginR
 	return nil, errors.New("invalid staff email or password")
 }
 
+func (r *Repo) InvestorLogin(ctx context.Context, payload dao.LoginPayload) (*dao.InvestorLoginResponse, error) {
+	email := strings.ToLower(strings.TrimSpace(payload.Email))
+	password := strings.TrimSpace(payload.Password)
+	if email == "" || password == "" {
+		return nil, errors.New("email and password are required")
+	}
+
+	data, err := r.AdminData(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, investor := range data.Investors {
+		if strings.EqualFold(investor.Email, email) && investor.Status == "active" && validPassword(investor.PasswordHash, password) {
+			investor.PasswordHash = ""
+			return &dao.InvestorLoginResponse{Investor: investor}, nil
+		}
+	}
+
+	return nil, errors.New("invalid investor email or password")
+}
+
 func normalizeUsers(data *dao.AdminData) error {
 	seen := make(map[string]bool)
 	for i := range data.Users {
@@ -159,6 +184,36 @@ func normalizeUsers(data *dao.AdminData) error {
 				return err
 			}
 			data.Users[i].PasswordHash = string(hash)
+		}
+	}
+
+	return nil
+}
+
+func normalizeInvestors(data *dao.AdminData) error {
+	seen := make(map[string]bool)
+	for i := range data.Investors {
+		email := strings.ToLower(strings.TrimSpace(data.Investors[i].Email))
+		if email == "" {
+			return errors.New("investor email is required")
+		}
+		if seen[email] {
+			return errors.New("investor email must be unique")
+		}
+		seen[email] = true
+		data.Investors[i].Email = email
+
+		if strings.TrimSpace(data.Investors[i].PasswordHash) == "" {
+			data.Investors[i].PasswordHash = "dev"
+			continue
+		}
+
+		if shouldHashPassword(data.Investors[i].PasswordHash) {
+			hash, err := bcrypt.GenerateFromPassword([]byte(data.Investors[i].PasswordHash), bcrypt.DefaultCost)
+			if err != nil {
+				return err
+			}
+			data.Investors[i].PasswordHash = string(hash)
 		}
 	}
 

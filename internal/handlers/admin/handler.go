@@ -69,6 +69,7 @@ func (h *Handler) GetData(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	sanitizeInvestors(&data)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -84,6 +85,12 @@ func (h *Handler) SaveData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one staff user is required"})
 		return
 	}
+	current, err := h.adminStore.AdminData(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	preserveInvestorPasswords(&payload, current)
 
 	if err := h.adminStore.SaveAdminData(c.Request.Context(), payload); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -95,6 +102,7 @@ func (h *Handler) SaveData(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	sanitizeInvestors(&data)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -113,4 +121,25 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func sanitizeInvestors(data *dao.AdminData) {
+	for i := range data.Investors {
+		data.Investors[i].PasswordHash = ""
+	}
+}
+
+func preserveInvestorPasswords(next *dao.AdminData, current dao.AdminData) {
+	passwords := make(map[string]string, len(current.Investors))
+	for _, investor := range current.Investors {
+		passwords[investor.ID] = investor.PasswordHash
+	}
+	for i := range next.Investors {
+		if next.Investors[i].PasswordHash != "" {
+			continue
+		}
+		if passwordHash := passwords[next.Investors[i].ID]; passwordHash != "" {
+			next.Investors[i].PasswordHash = passwordHash
+		}
+	}
 }

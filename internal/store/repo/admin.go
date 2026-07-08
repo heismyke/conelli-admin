@@ -9,8 +9,8 @@ func SeedData() dao.AdminData {
 			{ID: "user_staff", Name: "Site Office", Email: "staff@conelliengineering.com", PasswordHash: "dev", Role: "STAFF", CreatedAt: "2026-01-10T09:00:00.000Z"},
 		},
 		Investors: []dao.Investor{
-			{ID: "inv_1", Name: "Conelli Partner", Email: "partner@conelliengineering.com", Phone: "+234 800 000 1001", MemberSince: "2022-03-01", Status: "active"},
-			{ID: "inv_2", Name: "Infrastructure Holdings Ltd", Email: "ops@infrastructureholdings.ng", Phone: "+234 800 000 1002", MemberSince: "2023-06-15", Status: "active"},
+			{ID: "inv_1", Name: "Conelli Partner", Email: "partner@conelliengineering.com", Phone: "+234 800 000 1001", MemberSince: "2022-03-01", Status: "active", PasswordHash: "dev"},
+			{ID: "inv_2", Name: "Infrastructure Holdings Ltd", Email: "ops@infrastructureholdings.ng", Phone: "+234 800 000 1002", MemberSince: "2023-06-15", Status: "active", PasswordHash: "dev"},
 		},
 		Properties: []dao.Property{
 			{
