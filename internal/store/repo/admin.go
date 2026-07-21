@@ -82,6 +82,12 @@ func SeedData() dao.AdminData {
 			{InvestorID: "inv_1", PropertyID: "prop_2", InvestmentDate: "2023-01-18"},
 			{InvestorID: "inv_2", PropertyID: "prop_3", InvestmentDate: "2023-07-04"},
 		},
+		Payments: []dao.Payment{
+			{ID: "pay_1", InvestorID: "inv_1", PropertyID: "prop_1", Description: "Initial property payment", Amount: 60000000, PaymentDate: "2022-03-10", Status: "paid"},
+			{ID: "pay_2", InvestorID: "inv_1", PropertyID: "prop_1", Description: "Second installment payment", Amount: 54000000, PaymentDate: "2022-08-18", Status: "paid"},
+			{ID: "pay_3", InvestorID: "inv_1", PropertyID: "prop_1", Description: "Third installment payment", Amount: 45000000, PaymentDate: "2023-02-14", Status: "paid"},
+			{ID: "pay_4", InvestorID: "inv_1", PropertyID: "prop_1", Description: "Fourth installment payment", Amount: 45000000, PaymentDate: "2024-06-20", Status: "paid"},
+		},
 		Updates: []dao.Update{
 			{ID: "upd_1", PropertyID: "prop_3", Title: "Urban water management systems enhanced", Body: "Drainage channel checks confirmed stronger runoff control across the active FCDA work areas.", PostedAt: "2026-06-22T12:00:00.000Z", AuthorID: "user_admin"},
 			{ID: "upd_2", PropertyID: "prop_1", Title: "Structural works continuing in Lifecamp", Body: "The site team completed the latest quality review and confirmed progress against the construction programme.", PostedAt: "2026-06-20T12:00:00.000Z", AuthorID: "user_staff"},

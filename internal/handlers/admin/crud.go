@@ -195,6 +195,7 @@ func (h *Handler) DeleteProperty(c *gin.Context) {
 	}
 	data.Properties = append(data.Properties[:index], data.Properties[index+1:]...)
 	data.InvestorProperties = filter(data.InvestorProperties, func(item dao.InvestorProperty) bool { return item.PropertyID != id })
+	data.Payments = filter(data.Payments, func(item dao.Payment) bool { return item.PropertyID != id })
 	data.Updates = filter(data.Updates, func(item dao.Update) bool { return item.PropertyID != id })
 	data.Milestones = filter(data.Milestones, func(item dao.Milestone) bool { return item.PropertyID != id })
 	data.Materials = filter(data.Materials, func(item dao.Material) bool { return item.PropertyID != id })
@@ -307,6 +308,7 @@ func (h *Handler) DeleteInvestor(c *gin.Context) {
 	}
 	data.Investors = append(data.Investors[:index], data.Investors[index+1:]...)
 	data.InvestorProperties = filter(data.InvestorProperties, func(item dao.InvestorProperty) bool { return item.InvestorID != id })
+	data.Payments = filter(data.Payments, func(item dao.Payment) bool { return item.InvestorID != id })
 	data.Documents = filter(data.Documents, func(item dao.Document) bool { return item.InvestorID == nil || *item.InvestorID != id })
 	if !h.saveData(c, data) {
 		return
@@ -351,6 +353,9 @@ func (h *Handler) UnsetInvestorProperty(c *gin.Context) {
 		return
 	}
 	data.InvestorProperties = filter(data.InvestorProperties, func(item dao.InvestorProperty) bool {
+		return !(item.InvestorID == investorID && item.PropertyID == propertyID)
+	})
+	data.Payments = filter(data.Payments, func(item dao.Payment) bool {
 		return !(item.InvestorID == investorID && item.PropertyID == propertyID)
 	})
 	if !h.saveData(c, data) {

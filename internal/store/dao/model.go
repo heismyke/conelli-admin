@@ -49,6 +49,17 @@ type InvestorProperty struct {
 	InvestmentDate   string   `json:"investmentDate"`
 }
 
+type Payment struct {
+	ID          string  `json:"id"`
+	InvestorID  string  `json:"investorId"`
+	PropertyID  string  `json:"propertyId"`
+	Description string  `json:"description"`
+	Amount      float64 `json:"amount"`
+	PaymentDate string  `json:"paymentDate"`
+	Status      string  `json:"status"`
+	ReceiptURL  string  `json:"receiptUrl"`
+}
+
 type Update struct {
 	ID         string `json:"id"`
 	PropertyID string `json:"propertyId"`
@@ -92,6 +103,7 @@ type AdminData struct {
 	Investors          []Investor         `json:"investors"`
 	Properties         []Property         `json:"properties"`
 	InvestorProperties []InvestorProperty `json:"investorProperties"`
+	Payments           []Payment          `json:"payments"`
 	Updates            []Update           `json:"updates"`
 	Milestones         []Milestone        `json:"milestones"`
 	Materials          []Material         `json:"materials"`

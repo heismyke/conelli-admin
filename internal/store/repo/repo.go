@@ -61,6 +61,7 @@ func (r *Repo) SeedProjects(ctx context.Context) error {
 	upsertMilestones(&data, seed.Milestones)
 	upsertDocuments(&data, seed.Documents)
 	upsertInvestorProperties(&data, seed.InvestorProperties)
+	upsertPayments(&data, seed.Payments)
 
 	return r.SaveAdminData(ctx, data)
 }
@@ -313,5 +314,19 @@ func upsertInvestorProperties(data *dao.AdminData, seeded []dao.InvestorProperty
 			continue
 		}
 		data.InvestorProperties = append(data.InvestorProperties, item)
+	}
+}
+
+func upsertPayments(data *dao.AdminData, seeded []dao.Payment) {
+	index := make(map[string]int, len(data.Payments))
+	for i, payment := range data.Payments {
+		index[payment.ID] = i
+	}
+	for _, payment := range seeded {
+		if i, ok := index[payment.ID]; ok {
+			data.Payments[i] = payment
+			continue
+		}
+		data.Payments = append(data.Payments, payment)
 	}
 }
